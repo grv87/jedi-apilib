@@ -126,7 +126,7 @@ type
     // Changes a symbol exported from the DLL into the value in Buffer.
     // The change is not persistent (it will get lost when the DLL is unloaded)
     // Make sure AName is actually a symbol and not a function or this will crash horribly!
-    function SetExportedSymbol(const AName: string; var Buffer; Size: Integer): Boolean;
+    function SetExportedSymbol(const AName: AnsiString; var Buffer; Size: Integer): Boolean;
 
     property Loaded: Boolean read GetLoaded;
     property DLLName: string read FDLLName;
@@ -470,7 +470,7 @@ begin
     Error(GetLastError);
 end;
 
-function TJwaModuleLoader.SetExportedSymbol(const AName: string; var Buffer;
+function TJwaModuleLoader.SetExportedSymbol(const AName: AnsiString; var Buffer;
   Size: Integer): Boolean;
 var
   ASymbol: Pointer;

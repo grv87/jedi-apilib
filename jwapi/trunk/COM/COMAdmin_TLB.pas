@@ -1425,9 +1425,12 @@ end;
 
 procedure TCOMAdminCatalog.ImportUnconfiguredComponents(const bstrApplicationIDOrName: WideString;
                                                         var pVarCLSIDOrProgID: OleVariant);
+var
+  pVarComponentType: OleVariant;
 begin
+  pVarComponentType := EmptyParam;
   DefaultInterface.ImportUnconfiguredComponents(bstrApplicationIDOrName, pVarCLSIDOrProgID,
-                                                EmptyParam);
+                                                pVarComponentType);
 end;
 
 procedure TCOMAdminCatalog.ImportUnconfiguredComponents(const bstrApplicationIDOrName: WideString;
@@ -1440,9 +1443,12 @@ end;
 
 procedure TCOMAdminCatalog.PromoteUnconfiguredComponents(const bstrApplicationIDOrName: WideString;
                                                          var pVarCLSIDOrProgID: OleVariant);
+var
+  pVarComponentType: OleVariant;
 begin
+  pVarComponentType := EmptyParam;
   DefaultInterface.PromoteUnconfiguredComponents(bstrApplicationIDOrName, pVarCLSIDOrProgID,
-                                                 EmptyParam);
+                                                 pVarComponentType);
 end;
 
 procedure TCOMAdminCatalog.PromoteUnconfiguredComponents(const bstrApplicationIDOrName: WideString;
@@ -1455,8 +1461,11 @@ end;
 
 procedure TCOMAdminCatalog.ImportComponents(const bstrApplicationIDOrName: WideString;
                                             var pVarCLSIDOrProgID: OleVariant);
+var
+  pVarComponentType: OleVariant;
 begin
-  DefaultInterface.ImportComponents(bstrApplicationIDOrName, pVarCLSIDOrProgID, EmptyParam);
+  pVarComponentType := EmptyParam;
+  DefaultInterface.ImportComponents(bstrApplicationIDOrName, pVarCLSIDOrProgID, pVarComponentType);
 end;
 
 procedure TCOMAdminCatalog.ImportComponents(const bstrApplicationIDOrName: WideString;
@@ -1575,7 +1584,10 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents(dtlServerPage, [TCOMAdminCatalog]);
+{ Component TCOMAdminCatalog can't be registered
+  because it has already been registered by package dclstdl60.bpl. }
+
+//  RegisterComponents(dtlServerPage, [TCOMAdminCatalog]);
 end;
 
 end.

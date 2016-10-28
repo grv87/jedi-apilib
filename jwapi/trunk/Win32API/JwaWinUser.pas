@@ -1912,6 +1912,12 @@ type
   TMsg = MSG;
   PMsg = LPMSG;
 
+procedure POINTSTOPOINT(out pt: POINT; pts: POINTS); {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$EXTERNALSYM POINTSTOPOINT}
+
+function POINTTOPOINTS(pt: POINT): POINTS; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$EXTERNALSYM POINTTOPOINTS}
+
 function MAKEWPARAM(wLow, wHigh: WORD): WPARAM;
 {$EXTERNALSYM MAKEWPARAM}
 
@@ -2534,6 +2540,23 @@ const
   PBT_APMRESUMEAUTOMATIC = $0012;
   {$EXTERNALSYM PBT_APMRESUMEAUTOMATIC}
 
+{$IFDEF WIN2003_UP}
+  {$EXTERNALSYM PBT_POWERSETTINGCHANGE}
+  PBT_POWERSETTINGCHANGE = $8013;
+type
+  {$EXTERNALSYM POWERBROADCAST_SETTING}
+  POWERBROADCAST_SETTING = record
+    PowerSetting: GUID;
+    DataLength: DWORD;
+    Data: array[0..0] of UCHAR;
+  end;
+  TPowerBroadcastSettings = POWERBROADCAST_SETTING;
+  {$EXTERNALSYM PPOWERBROADCAST_SETTING}
+  PPOWERBROADCAST_SETTING = ^POWERBROADCAST_SETTING;
+  PPowerBroadcastSettings = PPOWERBROADCAST_SETTING;
+{$ENDIF WIN2003_UP}
+
+const  
   WM_DEVICECHANGE = $0219;
   {$EXTERNALSYM WM_DEVICECHANGE}
 
@@ -2568,6 +2591,11 @@ const
   {$EXTERNALSYM WM_DROPFILES}
   WM_MDIREFRESHMENU = $0234;
   {$EXTERNALSYM WM_MDIREFRESHMENU}
+  
+{$IFDEF WIN7_UP}
+  WM_TOUCH = $0240;
+  {$EXTERNALSYM WM_TOUCH}
+{$ENDIF WIN7_UP}
 
   WM_IME_SETCONTEXT      = $0281;
   {$EXTERNALSYM WM_IME_SETCONTEXT}
@@ -3872,6 +3900,10 @@ const
   {$EXTERNALSYM MOD_SHIFT}
   MOD_WIN     = $0008;
   {$EXTERNALSYM MOD_WIN}
+{$IFDEF WIN7_UP}
+  MOD_NOREPEAT = $4000;
+  {$EXTERNALSYM MOD_NOREPEAT}
+{$ENDIF WIN7_UP}
 
   IDHOT_SNAPWINDOW  = DWORD(-1); // SHIFT-PRINTSCRN
   {$EXTERNALSYM IDHOT_SNAPWINDOW}
@@ -4058,6 +4090,22 @@ function RegisterDeviceNotification(hRecipient: HANDLE; NotificationFilter: LPVO
 
 function UnregisterDeviceNotification(Handle: HDEVNOTIFY): BOOL; stdcall;
 {$EXTERNALSYM UnregisterDeviceNotification}
+
+{$IFDEF WIN2003_UP}
+
+type
+  HPOWERNOTIFY = PVOID;
+  {$EXTERNALSYM HPOWERNOTIFY}
+  PHPOWERNOTIFY = ^HPOWERNOTIFY;
+  {$EXTERNALSYM PHPOWERNOTIFY}
+
+{$EXTERNALSYM RegisterPowerSettingNotification}
+function RegisterPowerSettingNotification(hRecipient: HANDLE;
+  const PowerSettingGuid: GUID; Flags: DWORD): HPOWERNOTIFY; stdcall;
+{$EXTERNALSYM UnregisterPowerSettingNotification}
+function UnregisterPowerSettingNotification(Handle: HPOWERNOTIFY): BOOL; stdcall;
+
+{$ENDIF WIN2003_UP}
 
 function PostMessageA(hWnd: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): BOOL; stdcall;
 {$EXTERNALSYM PostMessageA}
@@ -5057,6 +5105,112 @@ type
 function SendInput(cInputs: UINT; pInputs: LPINPUT; cbSize: Integer): UINT; stdcall;
 {$EXTERNALSYM SendInput}
 
+{$IFDEF WIN7_UP}
+
+{*
+ * Touch Input defines and functions
+ *}
+
+{*
+ * Touch input handle
+ *}
+type
+  {$EXTERNALSYM HTOUCHINPUT}
+  HTOUCHINPUT = {type} HANDLE;
+
+  {$EXTERNALSYM tagTOUCHINPUT}
+  tagTOUCHINPUT = record
+    x: LONG;
+    y: LONG;
+    hSource: THandle;
+    dwID: DWORD;
+    dwFlags: DWORD;
+    dwMask: DWORD;
+    dwTime: DWORD;
+    dwExtraInfo: ULONG_PTR;
+    cxContact: DWORD;
+    cyContact: DWORD;
+  end;
+  {$EXTERNALSYM TOUCHINPUT}
+  TOUCHINPUT = tagTOUCHINPUT;
+  {$EXTERNALSYM PTOUCHINPUT}
+  PTOUCHINPUT = ^tagTOUCHINPUT;
+  TTouchInput = tagTOUCHINPUT;
+  {$EXTERNALSYM PCTOUCHINPUT}
+  PCTOUCHINPUT = PTOUCHINPUT;
+
+
+(*
+ * Conversion of touch input coordinates to pixels
+ *)
+{$EXTERNALSYM TOUCH_COORD_TO_PIXEL}
+function TOUCH_COORD_TO_PIXEL(l: LONG): LONG; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+
+(*
+ * Touch input flag values (TOUCHINPUT.dwFlags)
+ *)
+const
+  {$EXTERNALSYM TOUCHEVENTF_MOVE}
+  TOUCHEVENTF_MOVE                    = $0001;
+  {$EXTERNALSYM TOUCHEVENTF_DOWN}
+  TOUCHEVENTF_DOWN                    = $0002;
+  {$EXTERNALSYM TOUCHEVENTF_UP}
+  TOUCHEVENTF_UP                      = $0004;
+  {$EXTERNALSYM TOUCHEVENTF_INRANGE}
+  TOUCHEVENTF_INRANGE                 = $0008;
+  {$EXTERNALSYM TOUCHEVENTF_PRIMARY}
+  TOUCHEVENTF_PRIMARY                 = $0010;
+  {$EXTERNALSYM TOUCHEVENTF_NOCOALESCE}
+  TOUCHEVENTF_NOCOALESCE              = $0020;
+  {$EXTERNALSYM TOUCHEVENTF_PEN}
+  TOUCHEVENTF_PEN                     = $0040;
+  {$EXTERNALSYM TOUCHEVENTF_PALM}
+  TOUCHEVENTF_PALM                    = $0080;
+
+(*
+ * Touch input mask values (TOUCHINPUT.dwMask)
+ *)
+  {$EXTERNALSYM TOUCHINPUTMASKF_TIMEFROMSYSTEM}
+  TOUCHINPUTMASKF_TIMEFROMSYSTEM      = $0001;  // the dwTime field contains a system generated value
+  {$EXTERNALSYM TOUCHINPUTMASKF_EXTRAINFO}
+  TOUCHINPUTMASKF_EXTRAINFO           = $0002;  // the dwExtraInfo field is valid
+  {$EXTERNALSYM TOUCHINPUTMASKF_CONTACTAREA}
+  TOUCHINPUTMASKF_CONTACTAREA         = $0004;  // the cxContact and cyContact fields are valid
+
+{$EXTERNALSYM GetTouchInputInfo}
+function GetTouchInputInfo(
+  hTouchInput: HTOUCHINPUT;  // input event handle; from touch message lParam
+  cInputs: UINT;             // number of elements in the array
+  pInputs: PTOUCHINPUT;      // array of touch inputs
+  cbSize: Integer            // sizeof(TOUCHINPUT)
+): BOOL; stdcall;
+
+{$EXTERNALSYM CloseTouchInputHandle}
+function CloseTouchInputHandle(
+  hTouchInput: HTOUCHINPUT // input event handle; from touch message lParam
+): BOOL; stdcall;
+
+
+(*
+ * RegisterTouchWindow flag values
+ *)
+const
+  {$EXTERNALSYM TWF_FINETOUCH}
+  TWF_FINETOUCH                       = ($00000001);
+  {$EXTERNALSYM TWF_WANTPALM}
+  TWF_WANTPALM                        = ($00000002);
+
+{$EXTERNALSYM RegisterTouchWindow}
+function RegisterTouchWindow(hwnd: HWND; ulFlags: ULONG): BOOL; stdcall;
+
+{$EXTERNALSYM UnregisterTouchWindow}
+function UnregisterTouchWindow(hwnd: HWND): BOOL; stdcall;
+
+{$EXTERNALSYM IsTouchWindow}
+function IsTouchWindow(hwnd: HWND; pulFlags: PULONG): BOOL; stdcall;
+
+{$ENDIF WIN7_UP}
+
 type
   PLASTINPUTINFO = ^LASTINPUTINFO;
   tagLASTINPUTINFO = record
@@ -5351,57 +5505,79 @@ const
   SM_CYFOCUSBORDER     = 84;
   {$EXTERNALSYM SM_CYFOCUSBORDER}
 
-//#if(_WIN32_WINNT >= 0x0501)
+{$IFDEF WINXP_UP}
 
   SM_TABLETPC          = 86;
   {$EXTERNALSYM SM_TABLETPC}
   SM_MEDIACENTER       = 87;
   {$EXTERNALSYM SM_MEDIACENTER}
-
-
-
-
-
-
-
-//#endif /* _WIN32_WINNT >= 0x0501 */
-
-const
-  {$IFNDEF WIN98ME_UP}
-  SM_CMETRICS          = 76;
-  {$ELSE}
-  {$IFDEF WIN98ME}
-  SM_CMETRICS          = 83;
-  {$ELSE}
-  SM_CMETRICS          = 88;
-  {$ENDIF WIN98ME}
-  {$ENDIF !WIN98ME_UP}
-  {$EXTERNALSYM SM_CMETRICS}
-
   SM_STARTER = 88;
   {$EXTERNALSYM SM_STARTER}
-
-{$IFDEF WIN7_UP}
-  SM_DIGITIZER = 94;
-  {$EXTERNALSYM SM_DIGITIZER}
-
-  SM_MAXIMUMTOUCHES = 95;
-  {$EXTERNALSYM SM_DIGITIZER}
-{$ENDIF WIN7_UP}
-
   {<B>SM_SERVERR2</B> is used as an additional constant for GetSystemMetrics
    to detect the second release of Win2003}
   SM_SERVERR2 = 89;
   {$EXTERNALSYM SM_SERVERR2}
 
+{$ENDIF WINXP_UP}
+
+{$IFDEF WINVISTA_UP}
+
+  SM_MOUSEHORIZONTALWHEELPRESENT = 91;
+  {$EXTERNALSYM SM_MOUSEHORIZONTALWHEELPRESENT}
+  SM_CXPADDEDBORDER              = 92;
+  {$EXTERNALSYM SM_CXPADDEDBORDER}
+  
+{$ENDIF WINVISTA_UP}
+
+{$IFDEF WIN7_UP}
+
+  SM_DIGITIZER = 94;
+  {$EXTERNALSYM SM_DIGITIZER}
+  SM_MAXIMUMTOUCHES = 95;
+  {$EXTERNALSYM SM_MAXIMUMTOUCHES}
+  
+{$ENDIF WIN7_UP}
+
+// There are errors in WinUser.h:
+// #if (WINVER < 0x0500) && (!defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0400))
+// WinNT 4.0 (and also Windows Server 2003) gets SM_CMETRICS of the latest Windows
+// We fix them
+  {$IFNDEF WIN2000_UP}
+  SM_CMETRICS          = 76;
+  {$ELSE}
+  {$IFDEF WIN2000}
+  SM_CMETRICS          = 83;
+  {$ELSE}
+  {$IFDEF WINXP}
+  SM_CMETRICS          = 91;
+  {$ELSE}
+  {$IFDEF WIN2003} // FIX
+  SM_CMETRICS          = 91;
+  {$IFDEF WINVISTA}
+  SM_CMETRICS          = 93;
+  {$ELSE}
+  SM_CMETRICS          = 97;
+  {$ENDIF WINVISTA}
+  {$ENDIF WIN2003}
+  {$ENDIF WINXP}
+  {$ENDIF WIN2000}
+  {$ENDIF !WIN2000_UP}
+  {$EXTERNALSYM SM_CMETRICS}
+  
+{$ENDIF WIN7_UP}
   SM_REMOTESESSION = $1000;
   {$EXTERNALSYM SM_REMOTESESSION}
-  SM_SHUTTINGDOWN  = $2000;
+
+{$IFDEF WINXP_UP}
+
+  SM_SHUTTINGDOWN         = $2000;
   {$EXTERNALSYM SM_SHUTTINGDOWN}
-//#if(WINVER >= 0x0501)
-  SM_REMOTECONTROL = $2001;
+  SM_REMOTECONTROL        = $2001;
   {$EXTERNALSYM SM_REMOTECONTROL}
-//#endif /* WINVER >= 0x0501 */
+  SM_CARETBLINKINGENABLED = $2002;
+  {$EXTERNALSYM SM_CARETBLINKINGENABLED}
+
+{$ENDIF}
 
 function GetSystemMetrics(nIndex: Integer): Integer; stdcall;
 {$EXTERNALSYM GetSystemMetrics}
@@ -11682,6 +11858,21 @@ end;
 
 {$ENDIF WIN2000_UP}
 
+procedure POINTSTOPOINT(out pt: POINT; pts: POINTS); {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  with pt do
+  begin
+    x := LOWORD(LONG(pts));
+    y := HIWORD(LONG(pts));
+  end;
+end;
+
+function POINTTOPOINTS(pt: POINT): POINTS; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  with pt do
+    Result := POINTS(MAKELONG(x, y));
+end;
+
 function MAKEWPARAM(wLow, wHigh: WORD): WPARAM;
 begin
   Result := WPARAM(DWORD(MAKELONG(wLow, wHigh)));
@@ -11987,8 +12178,12 @@ end;
 
 function RAWINPUT_ALIGN(x: Pointer): Pointer;
 begin
-//Warning: Converting a pointer to Integer may conflict with 3GB adress space (and later 64bit)
-  Result := Pointer((DWORD_PTR(x) + SizeOf(DWORD) - 1) and not (SizeOf(DWORD) - 1));
+{$IFDEF WIN64}
+  Result := Pointer((SizeInt(*QWORD_PTR*)(x) + SizeOf(QWORD) - 1) and not (SizeOf(QWORD) - 1));
+{$ELSE}
+//Warning: Converting a pointer to Integer may conflict with 3GB adress space
+  Result := Pointer((SizeInt(*DWORD_PTR*)(x) + SizeOf(DWORD) - 1) and not (SizeOf(DWORD) - 1));
+{$ENDIF WIN64}
 end;
 
 function NEXTRAWINPUTBLOCK(ptr: PRawInput): PRawInput;
@@ -12000,6 +12195,15 @@ function RIDEV_EXMODE(mode: DWORD): DWORD;
 begin
   Result := mode and RIDEV_EXMODEMASK;
 end;
+
+{$IFDEF WIN7_UP}
+
+function TOUCH_COORD_TO_PIXEL(l: LONG): LONG;
+begin
+  Result := l div 100;
+end;
+
+{$ENDIF WIN7_UP}
 
 {$IFDEF DYNAMIC_LINK}
 
@@ -13354,6 +13558,36 @@ begin
         JMP     [_UnregisterDeviceNotification]
   end;
 end;
+
+{$IFDEF WIN2003_UP}
+
+var
+  _RegisterPowerSettingNotification: Pointer;
+
+function RegisterPowerSettingNotification;
+begin
+  GetProcedureAddress(_RegisterPowerSettingNotification, user32, 'RegisterPowerSettingNotification');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_RegisterPowerSettingNotification]
+  end;
+end;
+
+var
+  _UnregisterPowerSettingNotification: Pointer;
+
+function UnregisterPowerSettingNotification;
+begin
+  GetProcedureAddress(_UnregisterPowerSettingNotification, user32, 'UnregisterPowerSettingNotification');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_UnregisterPowerSettingNotification]
+  end;
+end;
+
+{$ENDIF WIN2003_UP}
 
 var
   _PostMessageA: Pointer;
@@ -15889,6 +16123,75 @@ begin
         JMP     [_SendInput]
   end;
 end;
+
+{$IFDEF WIN7_UP}
+
+var
+  _GetTouchInputInfo: Pointer;
+
+function GetTouchInputInfo;
+begin
+  GetProcedureAddress(_GetTouchInputInfo, user32, 'GetTouchInputInfo');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_GetTouchInputInfo]
+  end;
+end;
+
+var
+  _CloseTouchInputHandle: Pointer;
+
+function CloseTouchInputHandle;
+begin
+  GetProcedureAddress(_CloseTouchInputHandle, user32, 'CloseTouchInputHandle');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_CloseTouchInputHandle]
+  end;
+end;
+
+var
+  _RegisterTouchWindow: Pointer;
+
+function RegisterTouchWindow;
+begin
+  GetProcedureAddress(_RegisterTouchWindow, user32, 'RegisterTouchWindow');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_RegisterTouchWindow]
+  end;
+end;
+
+var
+  _UnregisterTouchWindow: Pointer;
+
+function UnregisterTouchWindow;
+begin
+  GetProcedureAddress(_UnregisterTouchWindow, user32, 'UnregisterTouchWindow');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_UnregisterTouchWindow]
+  end;
+end;
+
+var
+  _IsTouchWindow: Pointer;
+
+function IsTouchWindow;
+begin
+  GetProcedureAddress(_IsTouchWindow, user32, 'IsTouchWindow');
+  asm
+        MOV     ESP, EBP
+        POP     EBP
+        JMP     [_IsTouchWindow]
+  end;
+end;
+
+{$ENDIF WIN7_UP}
 
 var
   _GetLastInputInfo: Pointer;
@@ -21352,6 +21655,10 @@ function RegisterDeviceNotificationA; external user32 {$IFDEF DELAYED_LOADING}de
 function RegisterDeviceNotificationW; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'RegisterDeviceNotificationW';
 function RegisterDeviceNotification; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'RegisterDeviceNotification' + AWSuffix;
 function UnregisterDeviceNotification; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'UnregisterDeviceNotification';
+{$IFDEF WIN2003_UP}
+function RegisterPowerSettingNotification; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'RegisterPowerSettingNotification';
+function UnregisterPowerSettingNotification; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'UnregisterPowerSettingNotification';
+{$ENDIF WIN2003_UP}
 function PostMessageA; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'PostMessageA';
 function PostMessageW; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'PostMessageW';
 function PostMessage; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'PostMessage' + AWSuffix;
@@ -21547,6 +21854,13 @@ function VkKeyScanEx; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} na
 procedure keybd_event; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'keybd_event';
 procedure mouse_event; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'mouse_event';
 function SendInput; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'SendInput';
+{$IFDEF WIN7_UP}
+function GetTouchInputInfo; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'GetTouchInputInfo';
+function CloseTouchInputHandle; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'CloseTouchInputHandle';
+function RegisterTouchWindow; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'RegisterTouchWindow';
+function UnregisterTouchWindow; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'UnregisterTouchWindow';
+function IsTouchWindow; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'IsTouchWindow';
+{$ENDIF WIN7_UP}
 function GetLastInputInfo; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'GetLastInputInfo';
 function MapVirtualKeyA; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'MapVirtualKeyA';
 function MapVirtualKeyW; external user32 {$IFDEF DELAYED_LOADING}delayed{$ENDIF} name 'MapVirtualKeyW';
